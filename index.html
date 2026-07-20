@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REFAR — Kvartirangizni soting</title>
+<meta name="description" content="Kvartirangizni REFAR orqali soting. Barcha xizmatlar bepul — to'lov faqat kvartira sotilganda. Toshkent va Farg'ona shahar.">
+<style>
+  @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700&display=swap");
+  :root{
+    --ink:#1B2A4A;--ink-2:#33436a;--head:#1C2542;--red:#E24B4A;--red-dark:#c73b3a;
+    --bg:#eef1f6;--surface:#ffffff;--line:#e2e6ef;--muted:#6b7488;--ok:#1f9d6b;
+    --shadow:0 20px 55px -26px rgba(27,42,74,.5);--r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;min-height:100%}
+  body{font-family:"Manrope",system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+  .refar-form{display:flex;justify-content:center;padding:26px 15px 40px}
+  .rf-card{width:100%;max-width:530px;background:var(--surface);border-radius:calc(var(--r) + 6px);box-shadow:var(--shadow);overflow:hidden;border:1px solid var(--line)}
+  .rf-head{background:var(--head);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+  .rf-logo{height:34px;display:block}
+  .rf-lang{display:flex;gap:2px;background:rgba(255,255,255,.10);border-radius:999px;padding:3px}
+  .rf-lang button{border:0;background:transparent;cursor:pointer;font:600 12px "Manrope";color:rgba(255,255,255,.7);padding:5px 11px;border-radius:999px}
+  .rf-lang button.on{background:#fff;color:var(--head)}
+  .rf-prog{display:flex;gap:6px;padding:16px 22px 0}
+  .rf-prog i{height:4px;flex:1;border-radius:999px;background:var(--line);transition:background .3s}
+  .rf-prog i.done{background:var(--red)}
+  .rf-body{padding:22px 22px 26px}
+  .rf-eyebrow{font:700 11px "Manrope";letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
+  .rf-title{font-family:"Unbounded",sans-serif;font-weight:600;font-size:22px;line-height:1.22;margin:8px 0 4px}
+  .rf-sub{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:18px}
+  .rf-free{display:inline-flex;align-items:center;gap:7px;background:rgba(31,157,107,.10);color:var(--ok);font:700 12.5px "Manrope";padding:8px 13px;border-radius:999px;margin-bottom:16px}
+  .rf-free .d{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+  .rf-steps{list-style:none;padding:0;margin:4px 0 16px;display:flex;flex-direction:column;gap:12px}
+  .rf-steps li{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.45;color:var(--ink-2)}
+  .rf-num{flex:none;width:26px;height:26px;border-radius:8px;background:var(--head);color:#fff;font:700 12.5px "Manrope";display:grid;place-items:center;margin-top:1px}
+  .rf-comm{background:rgba(27,42,74,.05);border:1px solid var(--line);border-left:3px solid var(--red);border-radius:12px;padding:13px 15px;font-size:13.5px;line-height:1.5;color:var(--ink-2);margin-bottom:20px}
+  .rf-comm b{color:var(--ink)}
+  .rf-opts{display:flex;flex-direction:column;gap:10px}
+  .rf-opt{display:flex;align-items:center;gap:14px;padding:16px;border:1.5px solid var(--line);border-radius:var(--r);background:#fff;cursor:pointer;text-align:left;width:100%;font:600 15.5px "Manrope";color:var(--ink);transition:border-color .15s,box-shadow .15s,transform .05s}
+  .rf-opt:hover{border-color:var(--ink);box-shadow:0 8px 22px -16px rgba(27,42,74,.6)}
+  .rf-opt:active{transform:scale(.995)}
+  .rf-opt .ic{width:40px;height:40px;flex:none;border-radius:11px;background:rgba(27,42,74,.06);display:grid;place-items:center;color:var(--ink)}
+  .rf-opt.warn .ic{background:rgba(226,75,74,.10);color:var(--red)}
+  .rf-opt .arw{margin-left:auto;color:#c4cad8;transition:transform .15s,color .15s}
+  .rf-opt:hover .arw{color:var(--ink);transform:translateX(3px)}
+  .rf-field{margin-bottom:15px}
+  .rf-label{display:block;font:600 13px "Manrope";margin-bottom:7px;color:var(--ink-2)}
+  .rf-input,.rf-select{width:100%;padding:13px 14px;border:1.5px solid var(--line);border-radius:12px;font:500 15px "Manrope";color:var(--ink);background:#fff;outline:none;transition:border-color .15s}
+  .rf-input:focus,.rf-select:focus{border-color:var(--ink)}
+  .rf-phone{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;transition:border-color .15s}
+  .rf-phone:focus-within{border-color:var(--ink)}
+  .rf-phone span{display:grid;place-items:center;padding:0 12px;background:var(--bg);font:600 15px "Manrope";color:var(--ink-2);border-right:1.5px solid var(--line)}
+  .rf-phone input{flex:1;border:0;padding:13px 14px;font:500 15px "Manrope";outline:none;color:var(--ink)}
+  .rf-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .rf-chip{border:1.5px solid var(--line);background:#fff;border-radius:11px;padding:10px 16px;font:600 14px "Manrope";color:var(--ink);cursor:pointer;transition:.15s}
+  .rf-chip:hover{border-color:var(--ink)}
+  .rf-chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .rf-check{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted);cursor:pointer;user-select:none;margin-top:9px}
+  .rf-check input{width:17px;height:17px;accent-color:var(--red)}
+  .rf-err{color:var(--red);font-size:12.5px;margin-top:6px;display:none}
+  .rf-err.show{display:block}
+  .rf-btn{width:100%;border:0;border-radius:13px;padding:15px;cursor:pointer;font:700 15.5px "Manrope";background:var(--red);color:#fff;transition:background .15s,transform .05s;margin-top:6px}
+  .rf-btn:hover{background:var(--red-dark)}
+  .rf-btn:active{transform:scale(.99)}
+  .rf-btn:disabled{opacity:.6;cursor:default}
+  .rf-btn.ghost{background:transparent;color:var(--ink-2);border:1.5px solid var(--line);margin-top:10px}
+  .rf-btn.ghost:hover{border-color:var(--ink)}
+  .rf-reassure{text-align:center;font-size:12.5px;color:var(--muted);margin-top:12px;line-height:1.4}
+  .rf-back{background:none;border:0;color:var(--muted);font:600 13.5px "Manrope";cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;padding:4px 2px}
+  .rf-back:hover{color:var(--ink)}
+  .rf-note{background:rgba(27,42,74,.04);border:1px solid var(--line);border-radius:var(--r);padding:18px;color:var(--ink-2);font-size:14.5px;line-height:1.55;margin-bottom:18px}
+  .rf-badge{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;margin-bottom:16px}
+  .rf-badge.ok{background:rgba(31,157,107,.12);color:var(--ok)}
+  .rf-badge.info{background:rgba(226,75,74,.10);color:var(--red)}
+  .rf-soc-h{font:600 13px "Manrope";color:var(--ink-2);margin:4px 0 10px}
+  .rf-contact{display:flex;gap:9px;margin-bottom:12px}
+  .rf-contact a{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;text-decoration:none;font:700 14px "Manrope"}
+  .rf-contact a.call{background:var(--ink);color:#fff}
+  .rf-contact a.wtg{background:#2AABEE;color:#fff}
+  .rf-soc{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .rf-soc a{display:flex;align-items:center;gap:9px;padding:12px 13px;border:1.5px solid var(--line);border-radius:12px;text-decoration:none;color:var(--ink);font:600 13px "Manrope";transition:.15s}
+  .rf-soc a:hover{border-color:var(--ink);background:#fafbfd}
+  .rf-soc .si{width:26px;height:26px;flex:none;border-radius:7px;display:grid;place-items:center;color:#fff}
+  .rf-soc .ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+  .rf-soc .tg{background:#2AABEE}
+  .rf-soc small{display:block;color:var(--muted);font-weight:500;font-size:11px}
+  .rf-foot{text-align:center;font-size:11.5px;color:#9aa2b4;padding:2px 22px 20px}
+  .rf-screen{animation:rfIn .28s ease both}
+  @keyframes rfIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.rf-screen{animation:none}}
+</style>
+</head>
+<body>
+<div class="refar-form">
+  <div class="rf-card">
+    <div class="rf-head">
+      <img class="rf-logo" alt="REFAR" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCADCAjADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5Looor6A4QooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKdHHJLMkUUbySOwVERSzMScAADkkngAdaAG0V9pfCH9h+DU/DNvrvxZ1DUbO5uUEkeh6e6xPAp6edIQTv9UXG3oSTnGt8S/2FtCPhue/+FmsahDqkKF10zVJxLFc4/gWTAaNj2JyueuOo53iqfNy3NPZytc+F6Ks6hp99pOq3OmapZz2d7aytDPbXCFJInU4Ksp6EVWroMwooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKdHHJLMkUUbySOwRERSzMxOAABySTwAOtABHHJLMkUUbySOwRERSzMxOAABySTwAOtfoF+y9+y9H4JitfiF8QrJJPEzqJLDTZQGXTAR99h0M5H/fHQc5IP2X/2Xo/BMVr8QviFZJJ4mdRJYadKAy6YCPvt2M5H/fHQc5NfV1ebicTf3IbHRTp21YUUUVwmx87ftK/s1WPxY0qTxT4Wigs/GlrFgMcJHqSKOIpT2cdEkPToeOn5v6hp99pOrXOl6pZz2d7aytDPbXCFJInU4Ksp6EV+1NfO37Sn7NVj8WNKk8U+FooLLxpaxYVjhI9SRRxFKezjokh6dDx07cNieX3ZbGNSnfVH5rUVZ1DT7/SdWudL1Sznsr61laG4trhCkkTqcFWU9CKrV6ZzhRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFFABRRRQAUUUUAFFFOjjkmmSGGN5JHYIiIpZmYnAAA5JJIAA60AEcck0yQwxvJI7BERFLMzE4AAHJJPAA61+gf7L/7L0fgiK1+IXxCskk8TOoksdOkAZdLUj7zdjOR/3x0HOTR+y/8AsvR+CIbX4hfEKySTxO6iSx06QBl0tSPvN2M5H/fHQc5NfVtebicTf3IbHRTp21YUUVl+I/EeieEvC174j8R6lBp2mWURluLmY4VFH6kk4AA5JIA5NcO5saMs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21cn0z/C3Q+hGad4ViEXgi4ttHewt9fSVlm+1bSwIb+W3oeleZEA9QD9aTA9BUyyn3HShO0b3StdLy31T7GtLi9qvHFVqPNV5HCUk7OSe0lp7s0tObW66bW9a1i4nPwt1OLUtSsru9VSshtioUHcp2gDqQKTwxokWjeFmubK7sTq13EG86dxtjB5C464HU+p9q8mwPQflRtX+6PyrP8AsZqk6Ualk5XemnTS19tDo/10g8VHF1MPzSjDkTc3dav3rtP3mna/z6nbR+H7vRfG2jXt/qtpeNcXoLPG5JB6ksT9ap/EJ0k8cSNG6uvkRcqQR0rlcD0H5UoAHQYrtpYOUasa053aTW1utzxMVnVOphKmDo0eWMpqesnJpqNmtVrfe/yCiiiu8+fCiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/9k=">
+      <div class="rf-lang"><button data-lang="uz" class="on">UZ</button><button data-lang="ru">RU</button></div>
+    </div>
+    <div class="rf-prog" id="rfProg" style="display:none"><i data-p="1"></i><i data-p="2"></i><i data-p="3"></i></div>
+    <div class="rf-body" id="rfBody"></div>
+    <div class="rf-foot" id="rfFoot"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG  —  TARGETOLOG / SOZLAMALAR
+   ============================================================ */
+const CONFIG = {
+  apiEndpoint: "/api/lead",        // Vercel server funksiyasi (amoCRM + Telegram)
+  responseMinutes: 15,
+
+  // Tracking — targetolog o'z ID'larini shu yerga qo'yadi:
+  track: {
+    metaPixelId: "",               // Meta (Facebook/Instagram) Pixel ID
+    yandexMetrikaId: ""            // Yandex Metrika counter ID (raqam)
+  },
+
+  // Shahar bo'yicha operator kontaktlari (muvaffaqiyat ekranida chiqadi):
+  contacts: {
+    toshkent: {
+      phone:"+998 88 055 51 11", tel:"+998880555111",
+      tg_operator:"refar_toshkent_operator",
+      ig:"https://www.instagram.com/refar_toshkent/",
+      tg_channel:"https://t.me/refar_toshkent"
+    },
+    fargona: {
+      phone:"+998 97 415 51 11", tel:"+998974155111",
+      tg_operator:"refar_call",
+      ig:"https://www.instagram.com/refar_fargona/",
+      tg_channel:"https://t.me/fargonauybozor"
+    }
+  },
+  // Off-ramp (nomos lid) uchun ijtimoiy sahifalar:
+  social: {
+    ig_tosh:"https://www.instagram.com/refar_toshkent/", tg_tosh:"https://t.me/refar_toshkent",
+    ig_farg:"https://www.instagram.com/refar_fargona/",  tg_farg:"https://t.me/fargonauybozor"
+  }
+};
+/* ============================================================ */
+
+const I18N = {
+  uz:{
+    footer:"Toshkent va Farg'ona shahar · faqat kvartiralar",
+    intro_eyebrow:"Sotuvchilar uchun",
+    intro_title:"Kvartirangizni to'g'ri narxda soting",
+    intro_free:"Barcha xizmatlar bepul — to'lov faqat kvartira sotilganda",
+    proc_title:"Xizmat qanday ishlaydi",
+    steps:[
+      "Mutaxassis kvartirangizga borib tanishadi",
+      "Professional video, foto va 360° suratga olish",
+      "Kvartira siz belgilagan narxda reklama qilinadi va mijozlarga taklif etiladi",
+      "Savdo menejerlar xaridorlar bilan ishlab, uchrashuvlarni tashkil qiladi",
+      "Xaridor uy egasi bilan yuzma-yuz savdolashadi",
+      "Notariusda rasmiylashtirilgach rieltorlik xizmati olinadi"
+    ],
+    comm:"Xizmat haqi notarius orqali rasmiylashtirilgandan so'ng olinadi: <b>Toshkent shahar — 2%</b>, <b>Farg'ona shahar — 1.7%</b> (sotuv summasidan).",
+    start:"Kvartirani ro'yxatga qo'shish",
+    q1_eyebrow:"1-qadam", q1_title:"Nima sotmoqchisiz?", q1_sub:"Bitta variantni tanlang.",
+    q2_eyebrow:"2-qadam", q2_title:"Obyekt qayerda?", q2_sub:"Biz faqat Toshkent va Farg'ona shaharlarida ishlaymiz.",
+    q3_eyebrow:"3-qadam", q3_title:"Kvartira haqida qisqacha", q3_sub:"Agent "+CONFIG.responseMinutes+" daqiqada bog'lanadi.",
+    opt:{kvartira:"Kvartira",hovli:"Hovli / uy",dacha:"Dala hovli (dacha)",ofis:"Ofis / tijorat obyekti",boshqa:"Boshqa"},
+    city:{toshkent:"Toshkent shahar",fargona:"Farg'ona shahar",boshqa:"Boshqa shahar / viloyat"},
+    f_name:"Ismingiz", f_name_ph:"Ism", f_phone:"Telefon raqamingiz",
+    f_district:"Tuman", f_district_fg:"Mahalla / mo'ljal", f_district_ph:"Tanlang", f_district_fg_ph:"Masalan, markaz",
+    f_rooms:"Xonalar soni",
+    f_price:"Kutilayotgan narx (ixtiyoriy)", f_price_ph:"Masalan, 75 000 $", f_price_unknown:"Narxni bilmayman / kelishiladi",
+    submit:"Arizani yuborish", sending:"Yuborilmoqda...", back:"Orqaga",
+    reassure:"Ariza yuborish sizni hech narsaga majbur qilmaydi. Boshlang'ich xizmatlar bepul.",
+    err_name:"Ismingizni kiriting.", err_phone:"To'g'ri raqam kiriting (9 ta raqam).", err_rooms:"Xonalar sonini tanlang.",
+    off_type_title:"REFAR faqat kvartiralar bilan ishlaydi",
+    off_type_body:"E'tiborimizni bitta yo'nalishga — kvartira oldi-sotdisiga qaratganmiz va shu bo'yicha eng yaxshi natijani beramiz. Afsuski, «{x}» sotuvi bo'yicha xizmat ko'rsatmaymiz.",
+    off_loc_title:"Bu hudud hozircha bizda yo'q",
+    off_loc_body:"Ayni paytda REFAR faqat Toshkent shahar va Farg'ona shahar bo'yicha kvartiralarni sotadi. Boshqa hududlar bo'yicha xizmat ko'rsatmaymiz.",
+    soc_head:"Yangi e'lonlar uchun bizni kuzatib boring:",
+    ok_title:"Arizangiz qabul qilindi",
+    ok_body:"Agentimiz "+CONFIG.responseMinutes+" daqiqa ichida qo'ng'iroq qiladi. So'ng mutaxassis kvartirangizga borib, professional syomka qiladi. Boshlang'ich xizmatlarning barchasi bepul.",
+    ok_contact_head:"Kutib turmang — hoziroq bog'laning:",
+    call:"Qo'ng'iroq", write_tg:"Telegram", again:"Yangi ariza",
+    districts:["Bektemir","Chilonzor","Mirobod","Mirzo Ulug'bek","Olmazor","Sergeli","Uchtepa","Shayxontohur","Yakkasaroy","Yashnobod","Yunusobod","Yangihayot"]
+  },
+  ru:{
+    footer:"Ташкент и город Фергана · только квартиры",
+    intro_eyebrow:"Для продавцов",
+    intro_title:"Продайте квартиру по правильной цене",
+    intro_free:"Все услуги бесплатны — оплата только после продажи",
+    proc_title:"Как это работает",
+    steps:[
+      "Специалист приезжает и осматривает квартиру",
+      "Профессиональная видео-, фото- и 360°-съёмка",
+      "Квартира рекламируется по вашей цене и предлагается клиентам",
+      "Менеджеры работают с покупателями и организуют встречи",
+      "Покупатель торгуется с владельцем напрямую",
+      "После оформления у нотариуса взимается риелторская услуга"
+    ],
+    comm:"Оплата взимается после оформления сделки у нотариуса: <b>Ташкент — 2%</b>, <b>город Фергана — 1.7%</b> (от суммы продажи).",
+    start:"Добавить квартиру",
+    q1_eyebrow:"Шаг 1", q1_title:"Что продаёте?", q1_sub:"Выберите один вариант.",
+    q2_eyebrow:"Шаг 2", q2_title:"Где находится объект?", q2_sub:"Мы работаем только в Ташкенте и городе Фергана.",
+    q3_eyebrow:"Шаг 3", q3_title:"Коротко о квартире", q3_sub:"Агент свяжется в течение "+CONFIG.responseMinutes+" минут.",
+    opt:{kvartira:"Квартира",hovli:"Частный дом",dacha:"Дача",ofis:"Офис / коммерция",boshqa:"Другое"},
+    city:{toshkent:"город Ташкент",fargona:"город Фергана",boshqa:"Другой город / область"},
+    f_name:"Ваше имя", f_name_ph:"Имя", f_phone:"Номер телефона",
+    f_district:"Район", f_district_fg:"Махалля / ориентир", f_district_ph:"Выберите", f_district_fg_ph:"Например, центр",
+    f_rooms:"Количество комнат",
+    f_price:"Ожидаемая цена (необязательно)", f_price_ph:"Например, 75 000 $", f_price_unknown:"Не знаю / договорная",
+    submit:"Отправить заявку", sending:"Отправка...", back:"Назад",
+    reassure:"Заявка ни к чему вас не обязывает. Начальные услуги бесплатны.",
+    err_name:"Укажите имя.", err_phone:"Введите корректный номер (9 цифр).", err_rooms:"Выберите количество комнат.",
+    off_type_title:"REFAR работает только с квартирами",
+    off_type_body:"Мы сфокусированы на одном — купле-продаже квартир — и даём в этом лучший результат. К сожалению, по продаже «{x}» услуги не оказываем.",
+    off_loc_title:"Этого региона у нас пока нет",
+    off_loc_body:"Сейчас REFAR продаёт квартиры только в Ташкенте и городе Фергана. По другим регионам услуги не оказываем.",
+    soc_head:"Подпишитесь на нас — новые объявления:",
+    ok_title:"Заявка принята",
+    ok_body:"Агент позвонит в течение "+CONFIG.responseMinutes+" минут. Затем специалист приедет и проведёт профессиональную съёмку. Все начальные услуги бесплатны.",
+    ok_contact_head:"Не ждите — свяжитесь сейчас:",
+    call:"Позвонить", write_tg:"Telegram", again:"Новая заявка",
+    districts:["Бектемир","Чиланзар","Мирабад","Мирзо-Улугбек","Алмазар","Сергели","Учтепа","Шайхантахур","Яккасарай","Яшнабад","Юнусабад","Янгихаёт"]
+  }
+};
+
+const ARROW='<svg class="arw" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const ICN={
+  kvartira:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 8h.01M15 8h.01M9 12h.01M15 12h.01M9 16h.01M15 16h.01"/></svg>',
+  hovli:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>',
+  dacha:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l8-7 8 7"/><path d="M6 11v9h12v-9"/><path d="M12 5V2"/></svg>',
+  ofis:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 6h.01M15 6h.01M9 10h.01M15 10h.01M9 14h.01M15 14h.01M10 22v-4h4v4"/></svg>',
+  boshqa:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3 2.4c-.6.2-1 .7-1 1.6M12 17h.01"/></svg>',
+  pin:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  ig:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>',
+  tg:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M21.9 4.3l-3.1 14.6c-.2 1-.9 1.3-1.7.8l-4.7-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.3-4.9L18.3 5c.4-.3-.1-.5-.6-.2L6.4 12 1.7 10.5c-1-.3-1-1 .2-1.5L20.6 2.3c.8-.3 1.5.2 1.3 2z"/></svg>',
+  phone:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.2-1.2a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>'
+};
+
+const state={ lang:"uz", type:null, city:null, utm:{} };
+const body=document.getElementById("rfBody");
+const prog=document.getElementById("rfProg");
+const foot=document.getElementById("rfFoot");
+const t=()=>I18N[state.lang];
+
+/* ---- UTM capture (targetolog uchun) ---- */
+function captureUTM(){
+  const p=new URLSearchParams(location.search), o={};
+  ["utm_source","utm_medium","utm_campaign","utm_content","utm_term"].forEach(k=>{ if(p.get(k)) o[k]=p.get(k); });
+  o.referrer=document.referrer||null;
+  o.landing=location.href;
+  state.utm=o;
+}
+
+/* ---- Tracking init (Meta Pixel + Yandex Metrika) ---- */
+function initTracking(){
+  const {metaPixelId,yandexMetrikaId}=CONFIG.track;
+  if(metaPixelId){
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init",metaPixelId); fbq("track","PageView");
+  }
+  if(yandexMetrikaId){
+    (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();
+      for(var j=0;j<document.scripts.length;j++){if(document.scripts[j].src===r)return;}
+      k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+      (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+    ym(yandexMetrikaId,"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
+  }
+}
+function trackLead(city){
+  try{ if(window.fbq) fbq("track","Lead",{content_category:city}); }catch(e){}
+  try{ if(window.ym && CONFIG.track.yandexMetrikaId) ym(CONFIG.track.yandexMetrikaId,"reachGoal","lead"); }catch(e){}
+  try{ (window.dataLayer=window.dataLayer||[]).push({event:"refar_lead",city}); }catch(e){}
+}
+
+function setProg(step){
+  if(!step){prog.style.display="none";return;}
+  prog.style.display="flex";
+  prog.querySelectorAll("i").forEach(i=>i.classList.toggle("done", +i.dataset.p<=step));
+}
+function render(html,step){
+  body.innerHTML='<div class="rf-screen">'+html+'</div>';
+  foot.textContent=t().footer;
+  setProg(step);
+}
+function offSocials(){
+  const s=CONFIG.social,L=t();
+  return `<div class="rf-soc-h">${L.soc_head}</div>
+    <div class="rf-soc">
+      <a href="${s.ig_tosh}" target="_blank" rel="noopener"><span class="si ig">${ICN.ig}</span>Instagram<small>Toshkent</small></a>
+      <a href="${s.tg_tosh}" target="_blank" rel="noopener"><span class="si tg">${ICN.tg}</span>Telegram<small>Toshkent</small></a>
+      <a href="${s.ig_farg}" target="_blank" rel="noopener"><span class="si ig">${ICN.ig}</span>Instagram<small>Farg'ona</small></a>
+      <a href="${s.tg_farg}" target="_blank" rel="noopener"><span class="si tg">${ICN.tg}</span>Telegram<small>Farg'ona</small></a>
+    </div>`;
+}
+
+function intro(){
+  state.type=null; state.city=null;
+  const L=t();
+  const steps=L.steps.map((s,i)=>`<li><span class="rf-num">${i+1}</span><span>${s}</span></li>`).join("");
+  render(`
+    <div class="rf-eyebrow">${L.intro_eyebrow}</div>
+    <h1 class="rf-title">${L.intro_title}</h1>
+    <div class="rf-free"><span class="d"></span>${L.intro_free}</div>
+    <div class="rf-sub" style="margin-bottom:12px;font-weight:600;color:var(--ink)">${L.proc_title}</div>
+    <ul class="rf-steps">${steps}</ul>
+    <div class="rf-comm">${L.comm}</div>
+    <button class="rf-btn" id="rfStartBtn">${L.start}</button>`, 0);
+  document.getElementById("rfStartBtn").onclick=step1;
+}
+function step1(){
+  state.type=null; state.city=null;
+  const o=t().opt;
+  const rows=[["kvartira",false],["hovli",true],["dacha",true],["ofis",true],["boshqa",true]]
+    .map(([k,w])=>`<button class="rf-opt ${w?'warn':''}" data-type="${k}"><span class="ic">${ICN[k]}</span>${o[k]}${ARROW}</button>`).join("");
+  render(`
+    <button class="rf-back" data-back>&larr; ${t().back}</button>
+    <div class="rf-eyebrow">${t().q1_eyebrow}</div>
+    <h2 class="rf-title">${t().q1_title}</h2>
+    <p class="rf-sub">${t().q1_sub}</p>
+    <div class="rf-opts">${rows}</div>`, 1);
+  body.querySelector("[data-back]").onclick=intro;
+  body.querySelectorAll("[data-type]").forEach(b=>b.onclick=()=>{
+    state.type=b.dataset.type;
+    state.type==="kvartira" ? step2() : offType();
+  });
+}
+function step2(){
+  const c=t().city;
+  const rows=[["toshkent",false],["fargona",false],["boshqa",true]]
+    .map(([k,w])=>`<button class="rf-opt ${w?'warn':''}" data-city="${k}"><span class="ic">${ICN.pin}</span>${c[k]}${ARROW}</button>`).join("");
+  render(`
+    <button class="rf-back" data-back>&larr; ${t().back}</button>
+    <div class="rf-eyebrow">${t().q2_eyebrow}</div>
+    <h2 class="rf-title">${t().q2_title}</h2>
+    <p class="rf-sub">${t().q2_sub}</p>
+    <div class="rf-opts">${rows}</div>`, 2);
+  body.querySelector("[data-back]").onclick=step1;
+  body.querySelectorAll("[data-city]").forEach(b=>b.onclick=()=>{
+    state.city=b.dataset.city;
+    state.city==="boshqa" ? offLocation() : step3();
+  });
+}
+function step3(){
+  const L=t(), isTash=state.city==="toshkent";
+  const distField = isTash
+    ? `<select class="rf-select" id="rfDist"><option value="">${L.f_district_ph}</option>${L.districts.map(d=>`<option>${d}</option>`).join("")}</select>`
+    : `<input class="rf-input" id="rfDist" placeholder="${L.f_district_fg_ph}">`;
+  const rooms=["1","2","3","4+"].map(r=>`<button type="button" class="rf-chip" data-room="${r}">${r}</button>`).join("");
+  render(`
+    <button class="rf-back" data-back>&larr; ${L.back}</button>
+    <div class="rf-eyebrow">${L.q3_eyebrow}</div>
+    <h2 class="rf-title">${L.q3_title}</h2>
+    <p class="rf-sub">${L.q3_sub}</p>
+    <div class="rf-field"><label class="rf-label">${L.f_name}</label><input class="rf-input" id="rfName" placeholder="${L.f_name_ph}"><div class="rf-err" id="errName">${L.err_name}</div></div>
+    <div class="rf-field"><label class="rf-label">${L.f_phone}</label><div class="rf-phone"><span>+998</span><input id="rfPhone" inputmode="numeric" placeholder="90 123 45 67" maxlength="9"></div><div class="rf-err" id="errPhone">${L.err_phone}</div></div>
+    <div class="rf-field"><label class="rf-label">${isTash?L.f_district:L.f_district_fg}</label>${distField}</div>
+    <div class="rf-field"><label class="rf-label">${L.f_rooms}</label><div class="rf-chips" id="rfRooms">${rooms}</div><div class="rf-err" id="errRooms">${L.err_rooms}</div></div>
+    <div class="rf-field"><label class="rf-label">${L.f_price}</label><input class="rf-input" id="rfPrice" placeholder="${L.f_price_ph}"><label class="rf-check"><input type="checkbox" id="rfPriceX"> ${L.f_price_unknown}</label></div>
+    <button class="rf-btn" id="rfSubmit">${L.submit}</button>
+    <div class="rf-reassure">${L.reassure}</div>`, 3);
+  body.querySelector("[data-back]").onclick=step2;
+  let room=null;
+  body.querySelectorAll("[data-room]").forEach(b=>b.onclick=()=>{
+    room=b.dataset.room;
+    body.querySelectorAll("[data-room]").forEach(x=>x.classList.toggle("on",x===b));
+    document.getElementById("errRooms").classList.remove("show");
+  });
+  const phone=document.getElementById("rfPhone");
+  phone.oninput=()=>{phone.value=phone.value.replace(/\D/g,"").slice(0,9);};
+  const btn=document.getElementById("rfSubmit");
+  btn.onclick=async ()=>{
+    const name=document.getElementById("rfName").value.trim();
+    const ph=phone.value.trim();
+    let ok=true;
+    const show=(id,c)=>{document.getElementById(id).classList.toggle("show",c); if(c)ok=false;};
+    show("errName",name.length<2); show("errPhone",ph.length!==9); show("errRooms",!room);
+    if(!ok)return;
+    const priceX=document.getElementById("rfPriceX").checked;
+    const cityKey=state.city;
+    btn.disabled=true; btn.textContent=L.sending;
+    await submit({
+      status:"qualified", property_type:"kvartira",
+      city: cityKey==="toshkent"?"Toshkent shahar":"Farg'ona shahar",
+      name, phone:"+998"+ph,
+      district: document.getElementById("rfDist").value || null,
+      rooms:room,
+      price: priceX ? null : (document.getElementById("rfPrice").value.trim()||null),
+      price_negotiable: priceX
+    });
+    trackLead(cityKey);
+    success(cityKey);
+  };
+}
+function offType(){
+  const L=t();
+  render(`
+    <button class="rf-back" data-back>&larr; ${L.back}</button>
+    <div class="rf-badge info">${ICN.boshqa}</div>
+    <h2 class="rf-title">${L.off_type_title}</h2>
+    <div class="rf-note">${L.off_type_body.replace("{x}",L.opt[state.type])}</div>
+    ${offSocials()}`, 0);
+  body.querySelector("[data-back]").onclick=step1;
+}
+function offLocation(){
+  const L=t();
+  render(`
+    <button class="rf-back" data-back>&larr; ${L.back}</button>
+    <div class="rf-badge info">${ICN.pin}</div>
+    <h2 class="rf-title">${L.off_loc_title}</h2>
+    <div class="rf-note">${L.off_loc_body}</div>
+    ${offSocials()}`, 0);
+  body.querySelector("[data-back]").onclick=step2;
+}
+function success(cityKey){
+  const L=t(), c=CONFIG.contacts[cityKey];
+  render(`
+    <div class="rf-badge ok"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <h2 class="rf-title">${L.ok_title}</h2>
+    <div class="rf-note">${L.ok_body}</div>
+    <div class="rf-soc-h">${L.ok_contact_head}</div>
+    <div class="rf-contact">
+      <a class="call" href="tel:${c.tel}">${ICN.phone} ${L.call}</a>
+      <a class="wtg" href="https://t.me/${c.tg_operator}" target="_blank" rel="noopener">${ICN.tg} ${L.write_tg}</a>
+    </div>
+    <div class="rf-soc">
+      <a href="${c.ig}" target="_blank" rel="noopener"><span class="si ig">${ICN.ig}</span>Instagram<small>${L.city[cityKey]}</small></a>
+      <a href="${c.tg_channel}" target="_blank" rel="noopener"><span class="si tg">${ICN.tg}</span>Telegram<small>${L.city[cityKey]}</small></a>
+    </div>
+    <button class="rf-btn ghost" onclick="RF_start()">${L.again}</button>`, 0);
+}
+
+async function submit(payload){
+  payload.lang=state.lang;
+  payload.utm=state.utm;
+  payload.created_at=new Date().toISOString();
+  try{
+    const r=await fetch(CONFIG.apiEndpoint,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(payload)
+    });
+    if(!r.ok) throw new Error("HTTP "+r.status);
+  }catch(e){
+    // Preview yoki server hali ulanmagan — ariza baribir ko'rsatiladi, konsolga yoziladi.
+    console.log("[REFAR lead] server javob bermadi (preview?):", payload, e && e.message);
+  }
+}
+
+document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{
+  state.lang=b.dataset.lang;
+  document.querySelectorAll("[data-lang]").forEach(x=>x.classList.toggle("on",x===b));
+  RF_start();
+});
+function RF_start(){ intro(); }
+
+captureUTM();
+initTracking();
+RF_start();
+</script>
+</body>
+</html>
