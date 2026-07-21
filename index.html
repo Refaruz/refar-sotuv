@@ -114,7 +114,7 @@ const CONFIG = {
 
   // Tracking — targetolog o'z ID'larini shu yerga qo'yadi:
   track: {
-    metaPixelId: "",               // Meta (Facebook/Instagram) Pixel ID
+    metaPixelId: "1056849203456228",  // Meta (Facebook/Instagram) Pixel ID
     yandexMetrikaId: ""            // Yandex Metrika counter ID (raqam)
   },
 
@@ -414,6 +414,15 @@ function offLocation(){
 }
 function success(cityKey){
   const L=t(), c=CONFIG.contacts[cityKey];
+  // Meta uchun: muvaffaqiyat URL'ini "rahmat" sahifasiga o'zgartiramiz (UTM saqlanadi),
+  // so'ng yangi URL bilan PageView otamiz — URL bo'yicha konversiyani sanash mumkin bo'ladi.
+  try{
+    if(location.search.indexOf("rahmat=")<0){
+      const glue = location.search ? "&" : "?";
+      history.pushState({}, "", location.pathname + (location.search||"") + glue + "rahmat=1");
+    }
+    if(window.fbq) fbq("track","PageView");
+  }catch(e){}
   render(`
     <div class="rf-badge ok"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
     <h2 class="rf-title">${L.ok_title}</h2>
@@ -452,7 +461,7 @@ document.querySelectorAll("[data-lang]").forEach(b=>b.onclick=()=>{
   document.querySelectorAll("[data-lang]").forEach(x=>x.classList.toggle("on",x===b));
   RF_start();
 });
-function RF_start(){ intro(); }
+function RF_start(){ try{ if(location.search.indexOf("rahmat=")>-1) history.replaceState({},"", location.pathname + location.search.replace(/([?&])rahmat=1&?/,"$1").replace(/[?&]$/,"")); }catch(e){} intro(); }
 
 captureUTM();
 initTracking();
