@@ -1,9 +1,11 @@
+// ============================================================
 // Vercel serverless funksiyasi:  POST /api/lead
 // Formadan kelgan arizani amoCRM (lead+contact) + Telegram'ga yuboradi.
-// Barcha maxfiy kalitlar Vercel "Environment Variables" da saqlanadi (kodda EMAS).
+// Barcha maxfiy kalitlar Vercel "Environment Variables" da saqlanadi.
+// (Emojilar \u escape ko'rinishida - paste qilganda buzilmaydi.)
+// ============================================================
 
 module.exports = async function handler(req, res) {
-  // CORS (o'z domeningizda kerak bo'lmaydi, lekin xavfsiz)
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -30,15 +32,15 @@ module.exports = async function handler(req, res) {
   const result = { amo: false, telegram: false };
 
   const leadTitle =
-    `REFAR В· ${lead.city || ""}` +
-    (lead.rooms ? ` В· ${lead.rooms}-xona` : "") +
-    (lead.district ? ` В· ${lead.district}` : "");
+    "REFAR - " + (lead.city || "") +
+    (lead.rooms ? " - " + lead.rooms + "-xona" : "") +
+    (lead.district ? " - " + lead.district : "");
 
   // ---------- 1) amoCRM: lead + contact ----------
   try {
     if (AMO_SUBDOMAIN && AMO_ACCESS_TOKEN) {
       const complexBody = [{
-        name: leadTitle.trim() || `REFAR В· ${lead.name}`,
+        name: leadTitle.trim() || ("REFAR - " + lead.name),
         ...(AMO_PIPELINE_ID ? { pipeline_id: Number(AMO_PIPELINE_ID) } : {}),
         ...(AMO_STATUS_ID ? { status_id: Number(AMO_STATUS_ID) } : {}),
         _embedded: {
@@ -49,16 +51,16 @@ module.exports = async function handler(req, res) {
             ]
           }],
           tags: [lead.status || "lead", lead.city, "kvartira", u.utm_source]
-            .filter(Boolean).map(n => ({ name: String(n) }))
+            .filter(Boolean).map(function (n) { return { name: String(n) }; })
         }
       }];
 
       const amoRes = await fetch(
-        `https://${AMO_SUBDOMAIN}.amocrm.ru/api/v4/leads/complex`,
+        "https://" + AMO_SUBDOMAIN + ".amocrm.ru/api/v4/leads/complex",
         {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${AMO_ACCESS_TOKEN}`,
+            "Authorization": "Bearer " + AMO_ACCESS_TOKEN,
             "Content-Type": "application/json"
           },
           body: JSON.stringify(complexBody)
@@ -67,65 +69,69 @@ module.exports = async function handler(req, res) {
 
       if (amoRes.ok) {
         result.amo = true;
-        const data = await amoRes.json().catch(() => null);
+        const data = await amoRes.json().catch(function () { return null; });
         const leadId = Array.isArray(data) && data[0] && data[0].id;
 
-        // Batafsil izoh (note) вЂ” agent hamma ma'lumotni ko'radi
         if (leadId) {
           const noteText =
-`Yangi ariza вЂ” refar-sotuv.vercel.app
-Ism: ${lead.name}
-Tel: ${lead.phone}
-Shahar: ${lead.city || "-"}
-Tuman: ${lead.district || "-"}
-Xonalar: ${lead.rooms || "-"}
-Narx: ${lead.price || (lead.price_negotiable ? "kelishiladi" : "-")}
-Til: ${lead.lang || "-"}
-UTM: source=${u.utm_source || "-"} | medium=${u.utm_medium || "-"} | campaign=${u.utm_campaign || "-"} | content=${u.utm_content || "-"} | term=${u.utm_term || "-"}
-Referrer: ${u.referrer || "-"}`;
+            "Yangi ariza - refar-sotuv.vercel.app\n" +
+            "Ism: " + (lead.name || "-") + "\n" +
+            "Tel: " + (lead.phone || "-") + "\n" +
+            "Shahar: " + (lead.city || "-") + "\n" +
+            "Tuman: " + (lead.district || "-") + "\n" +
+            "Xonalar: " + (lead.rooms || "-") + "\n" +
+            "Narx: " + (lead.price || (lead.price_negotiable ? "kelishiladi" : "-")) + "\n" +
+            "Til: " + (lead.lang || "-") + "\n" +
+            "UTM: source=" + (u.utm_source || "-") + " | medium=" + (u.utm_medium || "-") +
+            " | campaign=" + (u.utm_campaign || "-") + " | content=" + (u.utm_content || "-") +
+            " | term=" + (u.utm_term || "-") + "\n" +
+            "Referrer: " + (u.referrer || "-");
 
           await fetch(
-            `https://${AMO_SUBDOMAIN}.amocrm.ru/api/v4/leads/${leadId}/notes`,
+            "https://" + AMO_SUBDOMAIN + ".amocrm.ru/api/v4/leads/" + leadId + "/notes",
             {
               method: "POST",
               headers: {
-                "Authorization": `Bearer ${AMO_ACCESS_TOKEN}`,
+                "Authorization": "Bearer " + AMO_ACCESS_TOKEN,
                 "Content-Type": "application/json"
               },
               body: JSON.stringify([{ note_type: "common", params: { text: noteText } }])
             }
-          ).catch(() => {});
+          ).catch(function () {});
         }
       } else {
-        console.error("amoCRM error:", amoRes.status, await amoRes.text().catch(() => ""));
+        console.error("amoCRM error:", amoRes.status, await amoRes.text().catch(function () { return ""; }));
       }
     }
   } catch (e) {
     console.error("amoCRM exception:", e);
   }
 
-  // ---------- 2) Telegram bildirishnoma ----------
+  // ---------- 2) Telegram bildirishnoma (shahar bo'yicha) ----------
   try {
-    // Shahar bo'yicha guruhni tanlash
     const cityStr = (lead.city || "").toLowerCase();
     let chatId = TG_CHAT_ID;
-    if (cityStr.includes("farg")) chatId = TG_CHAT_FARG || TG_CHAT_ID;
-    else if (cityStr.includes("tosh")) chatId = TG_CHAT_TOSH || TG_CHAT_ID;
+    if (cityStr.indexOf("farg") > -1) chatId = TG_CHAT_FARG || TG_CHAT_ID;
+    else if (cityStr.indexOf("tosh") > -1) chatId = TG_CHAT_TOSH || TG_CHAT_ID;
 
     if (TG_BOT_TOKEN && chatId) {
-      const esc = s => String(s || "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const esc = function (s) {
+        return String(s == null ? "-" : s)
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      };
+      // Emojilar \u escape orqali - paste qilganda ham buzilmaydi:
       const text =
-`рџЏ  <b>Yangi ariza вЂ” ${esc(lead.city)}</b>
-рџ‘¤ ${esc(lead.name)}
-рџ“ћ ${esc(lead.phone)}
-рџ“Ќ ${esc(lead.district)} В· ${esc(lead.rooms)}-xona
-рџ’° ${esc(lead.price || (lead.price_negotiable ? "kelishiladi" : "-"))}
-рџ“Љ ${esc(u.utm_source)} / ${esc(u.utm_campaign)}`;
+        "\u{1F3E0} <b>Yangi ariza - " + esc(lead.city) + "</b>\n" +
+        "\u{1F464} " + esc(lead.name) + "\n" +
+        "\u{1F4DE} " + esc(lead.phone) + "\n" +
+        "\u{1F4CD} " + esc(lead.district) + " \u00B7 " + esc(lead.rooms) + "-xona\n" +
+        "\u{1F4B0} " + esc(lead.price || (lead.price_negotiable ? "kelishiladi" : "-")) + "\n" +
+        "\u{1F4CA} " + esc(u.utm_source) + " / " + esc(u.utm_campaign);
 
-      const tgRes = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+      const tgRes = await fetch("https://api.telegram.org/bot" + TG_BOT_TOKEN + "/sendMessage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" })
+        body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: "HTML" })
       });
       result.telegram = tgRes.ok;
     }
@@ -134,4 +140,4 @@ Referrer: ${u.referrer || "-"}`;
   }
 
   return res.status(200).json({ ok: true, ...result });
-}
+};
