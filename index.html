@@ -351,12 +351,13 @@ function step3(){
     <button class="rf-back" data-back>&larr; ${L.back}</button>
     <div class="rf-eyebrow">${L.q3_eyebrow}</div>
     <h2 class="rf-title">${L.q3_title}</h2>
-    <p class="rf-sub">${L.q3_sub}</p>
+    <p class="rf-sub">${state.city==='toshkent'?(state.lang==='ru'?'Оставьте заявку. Ответственный сотрудник свяжется с вами.':'Ariza qoldiring. Mas’ul xodim siz bilan bog‘lanadi.'):L.q3_sub}</p>
     <div class="rf-field"><label class="rf-label">${L.f_name}</label><input class="rf-input" id="rfName" placeholder="${L.f_name_ph}"><div class="rf-err" id="errName">${L.err_name}</div></div>
     <div class="rf-field"><label class="rf-label">${L.f_phone}</label><div class="rf-phone"><span>+998</span><input id="rfPhone" inputmode="numeric" placeholder="90 123 45 67" maxlength="9"></div><div class="rf-err" id="errPhone">${L.err_phone}</div></div>
     <div class="rf-field"><label class="rf-label">${isTash?L.f_district:L.f_district_fg}</label>${distField}</div>
     <div class="rf-field"><label class="rf-label">${L.f_rooms}</label><div class="rf-chips" id="rfRooms">${rooms}</div><div class="rf-err" id="errRooms">${L.err_rooms}</div></div>
     <div class="rf-field"><label class="rf-label">${L.f_price}</label><input class="rf-input" id="rfPrice" placeholder="${L.f_price_ph}"><label class="rf-check"><input type="checkbox" id="rfPriceX"> ${L.f_price_unknown}</label></div>
+    ${state.city==='toshkent'?`<label class="rf-reassure"><input type="checkbox" id="rfCrmNotice"> ${state.lang==='ru'?'Разрешаю REFAR использовать имя, телефон и ответы для обработки заявки о продаже квартиры.':'Ismim, telefonim va javoblarimdan REFAR kvartira sotish murojaatimni ko‘rib chiqish uchun foydalanishiga roziman.'} <a href="https://refar.uz/siyosat" target="_blank" rel="noopener">${state.lang==='ru'?'Конфиденциальность':'Maxfiylik siyosati'}</a></label><div id="rfSendError" class="rf-err" role="alert"></div>`:''}
     <button class="rf-btn" id="rfSubmit">${L.submit}</button>
     <div class="rf-reassure">${L.reassure}</div>`, 3);
   body.querySelector("[data-back]").onclick=step2;
@@ -379,7 +380,7 @@ function step3(){
     const priceX=document.getElementById("rfPriceX").checked;
     const cityKey=state.city;
     btn.disabled=true; btn.textContent=L.sending;
-    await submit({
+    try{const receipt=await submit({
       status:"qualified", property_type:"kvartira",
       city: cityKey==="toshkent"?"Toshkent shahar":"Farg'ona shahar",
       name, phone:"+998"+ph,
@@ -388,8 +389,10 @@ function step3(){
       price: priceX ? null : (document.getElementById("rfPrice").value.trim()||null),
       price_negotiable: priceX
     });
-    trackLead(cityKey);
+    if(!receipt?.idempotent)trackLead(cityKey);
     success(cityKey);
+    }catch(e){btn.disabled=false;btn.textContent=L.submit;
+      const error=document.getElementById('rfSendError');if(error){error.textContent=e.message;error.classList.add('show');}}
   };
 }
 function offType(){
@@ -426,7 +429,7 @@ function success(cityKey){
   render(`
     <div class="rf-badge ok"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
     <h2 class="rf-title">${L.ok_title}</h2>
-    <div class="rf-note">${L.ok_body}</div>
+    <div class="rf-note">${cityKey==='toshkent'?(state.lang==='ru'?'Заявка сохранена в REFAR CRM. Ответственный сотрудник свяжется с вами.':'Arizangiz REFAR CRMda saqlandi. Mas’ul xodim siz bilan bog‘lanadi.'):L.ok_body}</div>
     <div class="rf-soc-h">${L.ok_contact_head}</div>
     <div class="rf-contact">
       <a class="call" href="tel:${c.tel}">${ICN.phone} ${L.call}</a>
@@ -439,10 +442,25 @@ function success(cityKey){
     <button class="rf-btn ghost" onclick="RF_start()">${L.again}</button>`, 0);
 }
 
+let crmRequestMemo=null;
+try{crmRequestMemo=JSON.parse(sessionStorage.getItem('refar-tashkent-request'));}catch{}
 async function submit(payload){
   payload.lang=state.lang;
   payload.utm=state.utm;
   payload.created_at=new Date().toISOString();
+  if(payload.city==='Toshkent shahar'){
+    const error=document.getElementById('rfSendError');if(error){error.textContent='';error.classList.remove('show');}
+    if(!document.getElementById('rfCrmNotice').checked)throw Error(state.lang==='ru'?'Подтвердите обработку заявки.':'Murojaatni ko‘rib chiqishga rozilikni belgilang.');
+    payload.notice_version='tashkent-seller-v1';payload.notice_accepted=true;
+    const stable={name:payload.name,phone:payload.phone,district:payload.district,rooms:payload.rooms,price:payload.price,price_negotiable:payload.price_negotiable};
+    const hash=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(stable))))].map(x=>x.toString(16).padStart(2,'0')).join('');
+    if(!crmRequestMemo||crmRequestMemo.hash!==hash)crmRequestMemo={hash,id:crypto.randomUUID()};
+    try{sessionStorage.setItem('refar-tashkent-request',JSON.stringify(crmRequestMemo));}catch{}
+    payload.request_id=crmRequestMemo.id;
+    try{const r=await fetch(CONFIG.apiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      const saved=await r.json();if(!r.ok||saved.ok!==true||saved.crm!==true||typeof saved.receipt!=='string')throw Error('NOT_SAVED');return saved;
+    }catch{throw Error(state.lang==='ru'?'Сохранение не подтверждено. Повторите отправку — дубликат не создастся.':'Saqlash tasdiqlanmadi. Qayta yuboring — takroriy ariza dubl yaratmaydi.');}
+  }
   try{
     const r=await fetch(CONFIG.apiEndpoint,{
       method:"POST",
@@ -469,3 +487,4 @@ RF_start();
 </script>
 </body>
 </html>
+
