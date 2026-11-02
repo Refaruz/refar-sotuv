@@ -13,6 +13,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   const lead = req.body || {};
+  if (lead.city === 'Toshkent shahar') return require('../lib/refar-tashkent.cjs').submitTashkent(req,res);
   if (!lead.name || !lead.phone) {
     return res.status(400).json({ error: "name va phone majburiy" });
   }
@@ -141,3 +142,4 @@ module.exports = async function handler(req, res) {
 
   return res.status(200).json({ ok: true, ...result });
 };
+
