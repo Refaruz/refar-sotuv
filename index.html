@@ -429,7 +429,7 @@ function success(cityKey){
   render(`
     <div class="rf-badge ok"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
     <h2 class="rf-title">${L.ok_title}</h2>
-    <div class="rf-note">${L.ok_body}</div>
+    <div class="rf-note">${cityKey==='toshkent'?(state.lang==='ru'?'Заявка сохранена в REFAR CRM. Ответственный сотрудник свяжется с вами.':'Arizangiz REFAR CRMda saqlandi. Mas’ul xodim siz bilan bog‘lanadi.'):L.ok_body}</div>
     <div class="rf-soc-h">${L.ok_contact_head}</div>
     <div class="rf-contact">
       <a class="call" href="tel:${c.tel}">${ICN.phone} ${L.call}</a>
